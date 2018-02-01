@@ -16,7 +16,7 @@ main =
 
 
 type alias Card =
-    ( String, String )
+    ( String, List FormattedText )
 
 
 type alias CardDeck =
@@ -25,9 +25,14 @@ type alias CardDeck =
 
 type alias Model =
     { entries : CardDeck
-    , displayed : String
+    , displayed : List FormattedText
     , decks : List String
     }
+
+
+type FormattedText
+    = PlainText String
+    | UnderlinedText String
 
 
 model : Model
@@ -39,7 +44,7 @@ model =
 
 
 initDisplayed =
-    "Click an entry to see its associated answer/pronunciation/solution."
+    [ PlainText "Click an entry to see its associated answer/pronunciation/solution." ]
 
 
 init : ( Model, Cmd Msg )
@@ -52,7 +57,7 @@ init =
 
 
 type Msg
-    = Show String
+    = Show (List FormattedText)
     | NewDeck (Result Http.Error CardDeck)
     | ChangeDeck String
 
@@ -77,7 +82,7 @@ update msg model =
 
         NewDeck (Err err) ->
             ( { model
-                | displayed = "Error loading new deck; staying on current deck."
+                | displayed = [ PlainText "Error loading new deck; staying on current deck." ]
               }
             , Cmd.none
             )
@@ -131,10 +136,10 @@ getDeckData deckString =
         url =
             "./" ++ deckString ++ ".json"
     in
-        Http.send NewDeck (Http.get url decodeDeckData)
+    Http.send NewDeck (Http.get url decodeDeckData)
 
 
-decodeDeckData : Decode.Decoder (List ( String, String ))
+decodeDeckData : Decode.Decoder CardDeck
 decodeDeckData =
     Decode.list (arrayAsTuple2 Decode.string Decode.string)
 
